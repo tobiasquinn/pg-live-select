@@ -113,7 +113,8 @@ class LiveSQL extends EventEmitter {
 				queryDetails = this.queryDetailsCache[query]
 			}
 			else {
-				queryDetails = await common.getQueryDetails(pgHandle.client, query)
+				queryDetails =
+					await common.getQueryDetails(pgHandle.client, query, params)
 				this.queryDetailsCache[query] = queryDetails
 			}
 

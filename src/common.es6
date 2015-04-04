@@ -2,6 +2,8 @@ var _            = require('lodash')
 var pg           = require('pg')
 var randomString = require('random-strings')
 
+var parseExplainResult = require('./parseExplainResult')
+
 module.exports = exports = {
 
 	/**
@@ -38,10 +40,11 @@ module.exports = exports = {
 	/**
 	 * Query information_schema to determine tables used and if updatable
 	 * @param  Object client node-postgres client
-	 * @param  String query  SQL statement, params not used
+	 * @param  String query  SQL statement
+	 * @param  Array  params Optional, values to substitute into query
 	 * @return Promise Array Table names
 	 */
-	async getQueryDetails(client, query) {
+	async getQueryDetails(client, query, params) {
 		var nullifiedQuery = query.replace(/\$\d+/g, 'NULL')
 		var viewName = `tmp_view_${randomString.alphaLower(10)}`
 
@@ -60,7 +63,15 @@ module.exports = exports = {
 
 		await exports.performQuery(client, `DROP VIEW ${viewName}`)
 
+		var explainResult = await exports.performQuery(client,
+			`EXPLAIN (FORMAT JSON) ${query}`, params)
+
+		var parsedTriggers = parseExplainResult(
+			explainResult.rows[0]['QUERY PLAN'][0]['Plan'])
+
+
 		return {
+			triggers: parsedTriggers,
 			isUpdatable: isUpdatableResult.rows[0].is_updatable === 'YES',
 			tablesUsed: tablesResult.rows.map(row => row.table_name)
 		}

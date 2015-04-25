@@ -3,7 +3,7 @@
  */
 
 // ES6+ may be used in all files required by this one
-require('babel/register')({ playground: true })
+require('babel/register')({ stage: 0 })
 
 var _ = require('lodash')
 var parseArgs = require('minimist')
@@ -14,7 +14,8 @@ var args = parseArgs(process.argv.slice(2))
 var defaults = {
   conn: 'postgres://meteor:meteor@127.0.0.1/meteor_test',
   channel: 'load_test',
-  case: 'static'
+  case: 'static',
+  output: null
 }
 
 if(args.help === true){
@@ -25,6 +26,7 @@ if(args.help === true){
   console.log('\nSet \'--case=all\' to run all cases except common.getClient')
   console.log('  There is an issue with common.getClient not closing properly.')
   console.log('  When running all cases, each will run for 30 mins duration.')
+  console.log('\nSet \'--output="filename"\' to export the data in JSON format.')
   process.exit()
 }
 

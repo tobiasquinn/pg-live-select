@@ -1,4 +1,5 @@
 require('console.table')
+var fs = require('fs')
 var _ = require('lodash')
 var pg = require('pg')
 var babar = require('babar')
@@ -342,6 +343,14 @@ process.on('SIGINT', () => {
         'Percentile': percentile * 100,
         'Time (ms)': Math.round(stats.quantile(respPrepTable, percentile))
       }
+    }))
+  }
+
+  if(options.output !== null) {
+    fs.writeFileSync(options.output, JSON.stringify({
+      responseTimes: eventPrep,
+      heapTotal: memoryPrep,
+      heapUsed: memory2Prep
     }))
   }
 

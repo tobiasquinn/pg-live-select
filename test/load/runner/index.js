@@ -1,12 +1,16 @@
-require('babel/register')({ playground: true })
+require('babel/register')({ stage: 0 })
 var _ = require('lodash')
+var Fiber = require('fibers')
 
 global.options  = JSON.parse(process.argv[2])
 global.settings = JSON.parse(process.argv[3])
 
 var runner = require('./' + settings.customRunner)
 
-if(typeof runner === 'function') {
+// runner = function when using promise, runner.runner when using callback
+if(typeof runner === 'function'
+  || typeof runner.runner === 'function'
+  || typeof runner.fiberRunner === 'function') {
   // Unit tests will export an async function that can be run over and over
 
   // Milliseconds to wait between finishing one operation and starting next
@@ -26,7 +30,18 @@ if(typeof runner === 'function') {
   }
 
   var performOperationForever = function() {
-    runner().then(runAfterTimeout, runnerError)
+    if(typeof runner === 'function') {
+      runner().then(runAfterTimeout, runnerError)
+    }
+    else if(typeof runner.runner === 'function') {
+      runner.runner(runAfterTimeout)
+    }
+    else if(typeof runner.fiberRunner === 'function') {
+      Fiber(function() {
+        runner.fiberRunner();
+        runAfterTimeout();
+      }).run()
+    }
   }
 
   _.range(settings.clientCount || 1).map(performOperationForever)

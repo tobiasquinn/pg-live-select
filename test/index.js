@@ -14,7 +14,7 @@ global.printStats = process.env.STATS === '1'
 global.isLoadTest = process.env.LOAD_TEST === '1'
 
 // ES6+ may be used in all files required by this one
-require('babel/register')({ playground: true })
+require('babel/register')({ stage: 0 })
 
 var _       = require('lodash')
 var LivePG = require('../')

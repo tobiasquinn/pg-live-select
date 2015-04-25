@@ -9,6 +9,7 @@ var liveDb = new LivePG(CONN_STR, CHANNEL)
 
 class liveClassScores extends EventEmitter {
   constructor(liveDb, classId) {
+    super()
     var assignmentIds = [], studentIds = []
 
     // Prepare supporting query

@@ -3,6 +3,7 @@ var _ = require('lodash')
 
 class SelectHandle extends EventEmitter {
   constructor(parent, queryHash) {
+    super()
     this.parent    = parent
     this.queryHash = queryHash
   }

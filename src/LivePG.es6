@@ -13,6 +13,7 @@ const STAGNANT_TIMEOUT = 100
 
 class LivePG extends EventEmitter {
   constructor(connStr, channel) {
+    super()
     this.connStr         = connStr
     this.channel         = channel
     this.notifyHandle    = null

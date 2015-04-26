@@ -10,6 +10,7 @@ var SelectHandle = require('./SelectHandle')
  *  available in current frame
  */
 const STAGNANT_TIMEOUT = 100
+var doneOnce = false
 
 class LivePG extends EventEmitter {
   constructor(connStr, channel) {
@@ -69,6 +70,9 @@ class LivePG extends EventEmitter {
               || !queryBuffer.triggers) {
 
               this.waitingToUpdate.push(queryHash)
+              // Wait until the initial results have been sent, then stop
+              //  performing getResultSetDiff on changes
+              doneOnce = true
             }
           }
         }
@@ -81,10 +85,18 @@ class LivePG extends EventEmitter {
         let queriesToUpdate =
           _.uniq(this.waitingToUpdate.splice(0, this.waitingToUpdate.length))
 
-        Promise.all(
-          queriesToUpdate.map(queryHash => this._updateQuery(queryHash)))
-          .then(performNextUpdate)
-          .catch(this._error)
+        if(doneOnce === false) {
+          // Initial results still need to be loaded for load test to record
+          //  memory usage
+          Promise.all(
+            queriesToUpdate.map(queryHash => this._updateQuery(queryHash)))
+            .then(performNextUpdate)
+            .catch(this._error)
+        }
+        else {
+          // Wait queue cleared but skip processing after initial results loaded
+          setTimeout(performNextUpdate, STAGNANT_TIMEOUT)
+        }
       }
       else {
         // No queries to update, wait for set duration

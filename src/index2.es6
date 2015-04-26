@@ -31,6 +31,6 @@ liveDb.select(`
 
 // Ctrl+C
 process.on('SIGINT', () => {
-  liveDb.cleanup().then(process.exit)
+  liveDb.cleanup().resolve(process.exit)
 })
 

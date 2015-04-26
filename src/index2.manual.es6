@@ -70,9 +70,8 @@ scoresHandle.on('update', (diff, rows) => {
 })
 
 // Ctrl+C
-process.on('SIGINT', async function() {
+process.on('SIGINT', function() {
   scoresHandle.stop()
-  await liveDb.cleanup()
-  process.exit()
+  liveDb.cleanup().resolve(process.exit)
 })
 

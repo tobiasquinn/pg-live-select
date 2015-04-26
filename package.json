@@ -17,7 +17,7 @@
     "test": "test"
   },
   "scripts": {
-    "make" : "babel src --stage 0 --optional runtime --out-dir lib",
+    "make" : "babel src --optional runtime --out-dir lib",
     "test" : "CONN=\"postgres://meteor:meteor@127.0.0.1/meteor_test\" CHANNEL=\"package_test\" DEBUG=0 STATS=1 nodeunit test/index.js"
   },
   "keywords": [

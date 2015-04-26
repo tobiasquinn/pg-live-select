@@ -46,7 +46,7 @@ var highScores = liveDb
 highScores.stop();
 
 // When exiting the application, remove all installed triggers
-liveDb.cleanup().then(function() {
+liveDb.cleanup().resolve(function() {
   // Database is now cleaned
 });
 ```
@@ -87,6 +87,12 @@ liveDb.select('SELECT * FROM scores WHERE score > $1', [ 10 ], {
 The `LivePG.prototype.select()` method returns an instance of the `SelectHandle` class that contains a `stop()` method for terminating updates to a live query.
 
 The `SelectHandle` class inherits from `EventEmitter`, providing an `update` event on each result set change with two arguments: `diff` and `data`. `diff` contains a description of which rows have been `added`, `moved`, `removed`, and `copied`. `data` contains an array of the full result set.
+
+### LivePG.prototype.cleanup()
+
+Removes active triggers and functions and stops listening for notifications
+
+Returns [`Future`](https://github.com/laverdet/node-fibers#futures) object.
 
 ## Getting started with the examples
 

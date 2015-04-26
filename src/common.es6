@@ -1,3 +1,4 @@
+var Future       = require('fibers/future')
 var _            = require('lodash')
 var pg           = require('pg')
 var randomString = require('random-strings')
@@ -9,15 +10,15 @@ module.exports = exports = {
   /**
    * Obtain a node-postgres client from the connection pool
    * @param  String  connectionString "postgres://user:pass@host/database"
-   * @return Promise { client, done() } Call done() to return client to pool!
+   * @return { client, done() } Call done() to return client to pool!
    */
   getClient(connectionString) {
-    return new Promise((resolve, reject) => {
-      pg.connect(connectionString, (error, client, done) => {
-        if(error) reject(error)
-        else resolve({ client, done })
-      })
+    var fut = new Future
+    pg.connect(connectionString, (error, client, done) => {
+      if(error) fut.throw(error)
+      else fut.return({ client, done })
     })
+    return fut.wait()
   },
 
   /**
@@ -26,41 +27,43 @@ module.exports = exports = {
    * @param  String query  SQL statement
    * @param  Array  params Optional, values to substitute into query
    *                       (params[0] => '$1'...)
-   * @return Promise Array Result set
+   * @return Array         Result set
    */
   performQuery(client, query, params=[]) {
-    return new Promise((resolve, reject) => {
-      client.query(query, params, (error, result) => {
-        if(error) reject(error)
-        else resolve(result)
-      })
+    var fut = new Future
+    client.query(query, params, (error, result) => {
+      if(error) fut.throw(error)
+      else fut.return(result)
     })
+    return fut.wait()
   },
 
   delay(duration=0) {
-    return new Promise((resolve, reject) => setTimeout(resolve, duration))
+    var fut = new Future
+    setTimeout(() => fut.return(), duration)
+    return fut.wait()
   },
 
   /**
    * Query information_schema to determine tables used
    * @param  Object client node-postgres client
    * @param  String query  SQL statement, params not used
-   * @return Promise Array Table names
+   * @return Array         Table names
    * TODO change to EXPLAIN?
    */
-  async getQueryDetails(client, query) {
+  getQueryDetails(client, query) {
     var nullifiedQuery = query.replace(/\$\d+/g, 'NULL')
     var viewName = `tmp_view_${randomString.alphaLower(10)}`
 
-    await exports.performQuery(client,
+    exports.performQuery(client,
       `CREATE OR REPLACE TEMP VIEW ${viewName} AS (${nullifiedQuery})`)
 
-    var tablesResult = await exports.performQuery(client,
+    var tablesResult = exports.performQuery(client,
       `SELECT DISTINCT vc.table_name
         FROM information_schema.view_column_usage vc
         WHERE view_name = $1`, [ viewName ])
 
-    await exports.performQuery(client, `DROP VIEW ${viewName}`)
+    exports.performQuery(client, `DROP VIEW ${viewName}`)
 
     return tablesResult.rows.map(row => row.table_name)
   },
@@ -70,10 +73,10 @@ module.exports = exports = {
    * @param  Object client  node-postgres client
    * @param  String table   Name of table to install trigger
    * @param  String channel NOTIFY channel
-   * @return Promise true   Successful
+   * @return true           Successful
    * TODO notification pagination at 8000 bytes
    */
-  async createTableTrigger(client, table, channel) {
+  createTableTrigger(client, table, channel) {
     var triggerName = `${channel}_${table}`
 
     var payloadTpl = `
@@ -94,7 +97,7 @@ module.exports = exports = {
       INTO row_data;
     `
 
-    await exports.performQuery(client,
+    exports.performQuery(client,
       `CREATE OR REPLACE FUNCTION ${triggerName}() RETURNS trigger AS $$
         DECLARE
           row_data   RECORD;
@@ -127,11 +130,11 @@ module.exports = exports = {
         END;
       $$ LANGUAGE plpgsql`)
 
-    await exports.performQuery(client,
+    exports.performQuery(client,
       `DROP TRIGGER IF EXISTS "${triggerName}"
         ON "${table}"`)
 
-    await exports.performQuery(client,
+    exports.performQuery(client,
       `CREATE TRIGGER "${triggerName}"
         AFTER INSERT OR UPDATE OR DELETE ON "${table}"
         FOR EACH ROW EXECUTE PROCEDURE ${triggerName}()`)
@@ -144,15 +147,15 @@ module.exports = exports = {
    * @param  Object client  node-postgres client
    * @param  String table   Name of table to remove trigger
    * @param  String channel NOTIFY channel
-   * @return Promise true   Successful
+   * @return true           Successful
    */
-  async dropTableTrigger(client, table, channel) {
+  dropTableTrigger(client, table, channel) {
     var triggerName = `${channel}_${table}`
 
-    await exports.performQuery(client,
+    exports.performQuery(client,
       `DROP TRIGGER IF EXISTS ${triggerName} ON ${table}`)
 
-    await exports.performQuery(client,
+    exports.performQuery(client,
       `DROP FUNCTION IF EXISTS ${triggerName}()`)
 
     return true
@@ -164,12 +167,12 @@ module.exports = exports = {
    * @param  Array   currentData Last known result set for this query/params
    * @param  String  query       SQL SELECT statement
    * @param  Array   params      Optionally, pass an array of parameters
-   * @return Promise Object      Enumeration of differences
+   * @return Object              Enumeration of differences
    */
-  async getResultSetDiff(client, currentData, query, params) {
+  getResultSetDiff(client, currentData, query, params) {
     var oldHashes = currentData.map(row => row._hash)
 
-    var result = await exports.performQuery(client, `
+    var result = exports.performQuery(client, `
       WITH
         res AS (${query}),
         data AS (

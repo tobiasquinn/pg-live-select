@@ -14,6 +14,7 @@ var selectCount =
 
 class liveClassScores extends EventEmitter {
   constructor(liveDb, classId) {
+    super()
     var assignmentIds = [], studentIds = []
 
     // Prepare supporting query

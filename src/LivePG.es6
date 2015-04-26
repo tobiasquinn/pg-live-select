@@ -1,10 +1,12 @@
 var EventEmitter = require('events').EventEmitter
 var Future       = require('fibers/future')
 var _            = require('lodash')
+var pg           = require('pg')
 var murmurHash   = require('murmurhash-js').murmur3
 
 var common       = require('./common')
 var SelectHandle = require('./SelectHandle')
+var collectionDiff = require('./collectionDiff')
 
 /*
  * Duration (ms) to wait to check for new updates when no updates are
@@ -96,18 +98,6 @@ class LivePG extends EventEmitter {
   _error(reason) {
     reason && this.emit('error', reason)
   }
-
-  _resolveAll(futures, callback) {
-    var output = futures.map((fut, index) => fut.resolve((err, val) => {
-      err && this._error(err)
-      output[index] = val
-
-      // Check of all values have returned
-      if(output.filter(item => item instanceof Future).length === 0) {
-        callback(output)
-      }
-    }))
-  }
 }
 
 // The following functions each return a Future
@@ -163,9 +153,13 @@ LivePG.prototype._init = function() {
       let queriesToUpdate =
         _.uniq(this.waitingToUpdate.splice(0, this.waitingToUpdate.length))
 
-      this._resolveAll(
-        queriesToUpdate.map(queryHash => this._updateQuery(queryHash)),
-        performNextUpdate)
+      let resolvedCount = 0
+      let resolvedHandler = () => {
+        ++resolvedCount === queriesToUpdate.length && performNextUpdate()
+      }
+
+      queriesToUpdate.forEach(queryHash =>
+        this._updateQuery(queryHash, resolvedHandler))
     }
     else {
       // No queries to update, wait for set duration
@@ -240,28 +234,53 @@ function(query, params, triggers, queryHash, handle) {
   }
 }.future()
 
-LivePG.prototype._updateQuery = function(queryHash) {
-  let pgHandle = common.getClient(this.connStr)
-
+LivePG.prototype._updateQuery = function(queryHash, callback) {
   let queryBuffer = this.selectBuffer[queryHash]
-  let update = common.getResultSetDiff(
-    pgHandle.client,
-    queryBuffer.data,
-    queryBuffer.query,
-    queryBuffer.params
-  )
 
-  pgHandle.done()
+  var currentData = queryBuffer.data
+  var oldHashes = currentData.map(row => row._hash)
 
-  if(update !== null) {
-    queryBuffer.data = update.data
+  pg.connect(this.connStr, (error, client, done) => {
+    if(error) return this._error(error)
+    client.query(`
+      WITH
+        res AS (${queryBuffer.query}),
+        data AS (
+          SELECT
+            res.*,
+            MD5(CAST(ROW_TO_JSON(res.*) AS TEXT)) AS _hash,
+            ROW_NUMBER() OVER () AS _index
+          FROM res),
+        data2 AS (
+          SELECT
+            1 AS _added,
+            data.*
+          FROM data
+          WHERE _hash NOT IN ('${oldHashes.join("','")}'))
+      SELECT
+        data2.*,
+        data._hash AS _hash
+      FROM data
+      LEFT JOIN data2
+        ON (data._index = data2._index)`,
+    queryBuffer.params, (error, result) => {
+      done()
+      if(error) return this._error(error)
 
-    for(let updateHandler of queryBuffer.handlers) {
-      updateHandler.emit('update',
-        filterHashProperties(update.diff), filterHashProperties(update.data))
-    }
-  }
-}.future()
+      var diff = collectionDiff(oldHashes, result.rows)
+      if(diff === null) return callback()
+
+      var newData = common.applyDiff(currentData, diff)
+      queryBuffer.data = newData
+
+      for(let updateHandler of queryBuffer.handlers) {
+        updateHandler.emit('update',
+          filterHashProperties(diff), filterHashProperties(newData))
+      }
+      return callback()
+    })
+  })
+}
 
 module.exports = LivePG
 // Expose SelectHandle class so it may be modified by application

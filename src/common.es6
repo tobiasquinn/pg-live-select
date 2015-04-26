@@ -74,7 +74,6 @@ module.exports = exports = {
    * @param  String table   Name of table to install trigger
    * @param  String channel NOTIFY channel
    * @return true           Successful
-   * TODO notification pagination at 8000 bytes
    */
   createTableTrigger(client, table, channel) {
     var triggerName = `${channel}_${table}`

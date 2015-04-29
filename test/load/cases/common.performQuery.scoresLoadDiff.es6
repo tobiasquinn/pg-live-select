@@ -5,9 +5,9 @@ var oldHashes = _.range(100).map(index => randomString.alphaLower(32))
 
 module.exports = {
   init: {
-    classCount: 20,
-    assignPerClass: 10,
-    studentsPerClass: 10,
+    classCount: 90,
+    assignPerClass: 20,
+    studentsPerClass: 20,
     classesPerStudent: 6
   },
   customRunner: 'common.performQuery',
@@ -45,7 +45,7 @@ module.exports = {
           1 AS _added,
           data.*
         FROM data
-        WHERE _hash NOT IN ('${oldHashes.join("','")}'))
+        WHERE _hash NOT IN ('OLDHASHES'))
     SELECT
       data2.*,
       data._hash AS _hash

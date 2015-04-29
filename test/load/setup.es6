@@ -11,6 +11,11 @@ var scoresLoadFixture = require('../fixtures/scoresLoad')
 // For querySequence compatibility with main test suite
 process.env.CONN = options.conn
 
+if(typeof options.assign_count === 'number') {
+  // Allow override from command line
+  settings.init.assignPerClass = options.assign_count
+}
+
 var memoryUsage  = []
 var classUpdates = []
 var waitingOps   = []

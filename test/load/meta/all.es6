@@ -21,7 +21,9 @@ function runCase(caseName) {
       '--channel',
       options.channel,
       '--case',
-      caseName
+      caseName,
+      '--output',
+      `test/load/viewer/${caseName}.${DURATION / 1000}.json`
     ])
 
     child.stdout.pipe(process.stdout)

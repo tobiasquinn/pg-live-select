@@ -2,7 +2,7 @@ module.exports = {
   init: {
     classCount: 90,
     assignPerClass: 20,
-    studentsPerClass: 20,
+    studentsPerClass: 5,
     classesPerStudent: 6
   },
   customRunner: 'common.performQuery',

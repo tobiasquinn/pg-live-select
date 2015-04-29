@@ -1,6 +1,6 @@
 {
   "name"        : "pg-live-select",
-  "version"     : "0.0.7",
+  "version"     : "0.0.8",
   "description" : "Live updating PostgreSQL SELECT statements",
   "main"        : "lib/LivePG.js",
   "license"     : "MIT",

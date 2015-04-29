@@ -7,6 +7,7 @@ module.exports = {
   },
   customRunner: 'common.performQuery',
   clientCount: 50,
+  paramCount: 0,
   query: `SELECT 1+1`
 }
 

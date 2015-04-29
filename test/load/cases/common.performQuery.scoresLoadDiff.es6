@@ -1,17 +1,13 @@
-var _            = require('lodash')
-var randomString = require('random-strings')
-
-var oldHashes = _.range(100).map(index => randomString.alphaLower(32))
-
 module.exports = {
   init: {
-    classCount: 20,
-    assignPerClass: 10,
-    studentsPerClass: 10,
+    classCount: 90,
+    assignPerClass: 20,
+    studentsPerClass: 20,
     classesPerStudent: 6
   },
   customRunner: 'common.performQuery',
   clientCount: 50,
+  paramCount: 2,  // class_id and oldHashes
   query: `
     WITH
       res AS (
@@ -45,13 +41,12 @@ module.exports = {
           1 AS _added,
           data.*
         FROM data
-        WHERE _hash NOT IN ('${oldHashes.join("','")}'))
+          WHERE NOT (_hash = ANY ($2)))
     SELECT
       data2.*,
       data._hash AS _hash
     FROM data
     LEFT JOIN data2
-      ON (data._index = data2._index)`,
-  params: [ 1 ]
+      ON (data._index = data2._index)`
 }
 

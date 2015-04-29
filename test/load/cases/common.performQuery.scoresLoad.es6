@@ -7,6 +7,7 @@ module.exports = {
   },
   customRunner: 'common.performQuery',
   clientCount: 50,
+  paramCount: 1, // class_id
   query: `
     SELECT
       students.name  AS student_name,
@@ -26,6 +27,5 @@ module.exports = {
       assignments.class_id = $1
     ORDER BY
       score_id ASC`,
-  params: [ 1 ]
 }
 

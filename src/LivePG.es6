@@ -33,8 +33,6 @@ class LivePG extends EventEmitter {
     common.performQuery(this.notifyHandle.client, `LISTEN "${this.channel}"`)
       .catch(this._error)
 
-    // Cache partial payloads in this closure
-
     this.notifyHandle.client.on('notification', info => {
       if(info.channel === this.channel) {
         var payload = this._processNotification(info.payload)

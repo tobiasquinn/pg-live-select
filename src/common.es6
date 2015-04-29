@@ -30,10 +30,19 @@ module.exports = exports = {
    */
   performQuery(client, query, params=[]) {
     return new Promise((resolve, reject) => {
-      client.query(query, params, (error, result) => {
+      let callback = (error, result) => {
         if(error) reject(error)
         else resolve(result)
-      })
+      }
+      if(typeof query === 'string') {
+        // Parameterized query
+        client.query(query, params, callback)
+      }
+      else if(typeof query === 'object') {
+        // Prepared statements pass an object
+        // https://github.com/brianc/node-postgres/wiki/Prepared-Statements
+        client.query(query, callback)
+      }
     })
   },
 
@@ -166,10 +175,12 @@ module.exports = exports = {
    * @param  Array   params      Optionally, pass an array of parameters
    * @return Promise Object      Enumeration of differences
    */
-  async getResultSetDiff(client, currentData, query, params) {
+  async getResultSetDiff(client, currentData, query, params, queryHash) {
     var oldHashes = currentData.map(row => row._hash)
 
-    var result = await exports.performQuery(client, `
+    var result = await exports.performQuery(client, {
+      name: `refresh_${queryHash}`,
+      text: `
       WITH
         res AS (${query}),
         data AS (
@@ -183,13 +194,15 @@ module.exports = exports = {
             1 AS _added,
             data.*
           FROM data
-          WHERE _hash NOT IN ('${oldHashes.join("','")}'))
+          WHERE NOT (_hash = ANY ($${params.length + 1})))
       SELECT
         data2.*,
         data._hash AS _hash
       FROM data
       LEFT JOIN data2
-        ON (data._index = data2._index)`, params)
+        ON (data._index = data2._index)`,
+      values: params.concat([ oldHashes ])
+    })
 
     var diff = collectionDiff(oldHashes, result.rows)
 

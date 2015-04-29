@@ -191,7 +191,8 @@ class LivePG extends EventEmitter {
       pgHandle.client,
       queryBuffer.data,
       queryBuffer.query,
-      queryBuffer.params
+      queryBuffer.params,
+      queryHash
     )
 
     pgHandle.done()

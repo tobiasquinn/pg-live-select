@@ -88,6 +88,8 @@ The `LivePG.prototype.select()` method returns an instance of the `SelectHandle`
 
 The `SelectHandle` class inherits from `EventEmitter`, providing an `update` event on each result set change with two arguments: `diff` and `data`. `diff` contains a description of which rows have been `added`, `moved`, `removed`, and `copied`. `data` contains an array of the full result set.
 
+An `error` event is emitted from the `SelectHandle` for initialization errors.
+
 ## Getting started with the examples
 
 1. Run `npm install` to download dependent packages.

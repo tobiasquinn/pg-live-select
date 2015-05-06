@@ -112,7 +112,7 @@ class LivePG extends EventEmitter {
 
     // Perform initialization asynchronously
     this._initSelect(query, params, triggers, queryHash, handle)
-      .catch(this._error)
+      .catch(error => handle.emit('error', error))
 
     return handle
   }
@@ -156,28 +156,35 @@ class LivePG extends EventEmitter {
 
       let pgHandle = await common.getClient(this.connStr)
       let tablesUsed
-      if(queryHash in this.tablesUsedCache) {
-        tablesUsed = this.tablesUsedCache[queryHash]
-      }
-      else {
-        tablesUsed = await common.getQueryDetails(pgHandle.client, query)
-        this.tablesUsedCache[queryHash] = tablesUsed
-      }
 
-      for(let table of tablesUsed) {
-        if(!(table in this.allTablesUsed)) {
-          this.allTablesUsed[table] = [ queryHash ]
-          await common.createTableTrigger(pgHandle.client, table, this.channel)
+      try {
+        if(queryHash in this.tablesUsedCache) {
+          tablesUsed = this.tablesUsedCache[queryHash]
         }
-        else if(this.allTablesUsed[table].indexOf(queryHash) === -1) {
-          this.allTablesUsed[table].push(queryHash)
+        else {
+          tablesUsed = await common.getQueryDetails(pgHandle.client, query)
+          this.tablesUsedCache[queryHash] = tablesUsed
         }
+
+        for(let table of tablesUsed) {
+          if(!(table in this.allTablesUsed)) {
+            this.allTablesUsed[table] = [ queryHash ]
+            await common.createTableTrigger(pgHandle.client, table, this.channel)
+          }
+          else if(this.allTablesUsed[table].indexOf(queryHash) === -1) {
+            this.allTablesUsed[table].push(queryHash)
+          }
+        }
+
+        // Retrieve initial results
+        this.waitingToUpdate.push(queryHash)
+      }
+      catch(error) {
+        pgHandle.done()
+        throw error
       }
 
       pgHandle.done()
-
-      // Retrieve initial results
-      this.waitingToUpdate.push(queryHash)
     }
   }
 

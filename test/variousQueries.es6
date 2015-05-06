@@ -23,9 +23,11 @@ exports.variousQueries = function(test) {
         .catch(error => console.error(error))
         .then(result => {
           var updateLog  = [] // Cache for any updates to this query
+          var errorLog   = []
           var nextLogPos = 0 // Length at last action performed
-          var select     = liveDb.select(query).on('update',
-            (diff, data) => updateLog.push({ diff, data }))
+          var select     = liveDb.select(query)
+            .on('update', (diff, data) => updateLog.push({ diff, data }))
+            .on('error', error => errorLog.push(error))
 
           // For each event, check values or perform action, then continue
           var processEvents = (callback, index) => {
@@ -72,6 +74,18 @@ exports.variousQueries = function(test) {
                     processEvents(callback, index + 1)
                   }
                   break
+                case 'error':
+                  if(errorLog.length === 0) {
+                    // No error yet, wait longer
+                    setTimeout(() => {
+                      processEvents(callback, index)
+                    }, 100)
+                  }
+                  else {
+                    test.ok(errorLog[0].toString().match(data) !== null)
+                    // Move to next event
+                    processEvents(callback, index + 1)
+                  }
                 case 'unchanged':
                   setTimeout(() => {
                     test.equal(updateLog.length, nextLogPos,

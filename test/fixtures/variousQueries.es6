@@ -546,6 +546,13 @@ exports.cases.stopped = {
   ]
 }
 
+exports.cases.relation_error = {
+  query: `SELECT score FROM scores_invalid ORDER BY score DESC`,
+  events: [
+    { error: /error: relation "scores_relation_error_invalid" does not exist/ }
+  ]
+}
+
 let newName = randomString.alphaLower(BIG_PAYLOAD_LENGTH)
 exports.cases.bigPayload = {
   query: `SELECT big_name FROM big_payload ORDER BY id ASC`,

@@ -62,14 +62,14 @@ module.exports = exports = {
     var viewName = `tmp_view_${randomString.alphaLower(10)}`
 
     await exports.performQuery(client,
-      `CREATE OR REPLACE TEMP VIEW ${viewName} AS (${nullifiedQuery})`)
+      `CREATE OR REPLACE TEMP VIEW "${viewName}" AS (${nullifiedQuery})`)
 
     var tablesResult = await exports.performQuery(client,
       `SELECT DISTINCT vc.table_name
         FROM information_schema.view_column_usage vc
         WHERE view_name = $1`, [ viewName ])
 
-    await exports.performQuery(client, `DROP VIEW ${viewName}`)
+    await exports.performQuery(client, `DROP VIEW "${viewName}"`)
 
     return tablesResult.rows.map(row => row.table_name)
   },
@@ -80,7 +80,6 @@ module.exports = exports = {
    * @param  String table   Name of table to install trigger
    * @param  String channel NOTIFY channel
    * @return Promise true   Successful
-   * TODO notification pagination at 8000 bytes
    */
   async createTableTrigger(client, table, channel) {
     var triggerName = `${channel}_${table}`
@@ -143,7 +142,7 @@ module.exports = exports = {
     await exports.performQuery(client,
       `CREATE TRIGGER "${triggerName}"
         AFTER INSERT OR UPDATE OR DELETE ON "${table}"
-        FOR EACH ROW EXECUTE PROCEDURE ${triggerName}()`)
+        FOR EACH ROW EXECUTE PROCEDURE "${triggerName}"()`)
 
     return true
   },
@@ -159,10 +158,10 @@ module.exports = exports = {
     var triggerName = `${channel}_${table}`
 
     await exports.performQuery(client,
-      `DROP TRIGGER IF EXISTS ${triggerName} ON ${table}`)
+      `DROP TRIGGER IF EXISTS "${triggerName}" ON "${table}"`)
 
     await exports.performQuery(client,
-      `DROP FUNCTION IF EXISTS ${triggerName}()`)
+      `DROP FUNCTION IF EXISTS "${triggerName}"()`)
 
     return true
   },

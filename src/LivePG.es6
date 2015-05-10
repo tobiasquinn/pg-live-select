@@ -151,7 +151,8 @@ class LivePG extends EventEmitter {
         triggers,
         data          : [],
         handlers      : [ handle ],
-        notifications : []
+        notifications : [],
+        initialized   : false
       }
 
       let pgHandle = await common.getClient(this.connStr)
@@ -210,6 +211,16 @@ class LivePG extends EventEmitter {
           filterHashProperties(update.diff), filterHashProperties(update.data))
       }
     }
+    else if(queryBuffer.initialized === false) {
+      // Initial update with empty data
+      for(let updateHandler of queryBuffer.handlers) {
+        updateHandler.emit('update',
+          { removed: null, moved: null, copied: null, added: [] },
+          [])
+      }
+    }
+
+    queryBuffer.initialized = true
   }
 
   _processNotification(payload) {

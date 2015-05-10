@@ -508,6 +508,30 @@ exports.cases.allExpression = {
   ]
 }
 
+// If initial result set is empty, an update event with an empty added array
+//  is emitted.
+exports.cases.initialEmpty = {
+  query: `SELECT score  FROM scores WHERE score > 100 ORDER BY score DESC`,
+  events: [
+    { diff: {
+      removed: null,
+      moved: null,
+      copied: null,
+      added: []
+    } },
+    { data: [] },
+    { perform: [
+      `UPDATE scores SET score = 200 WHERE id = 3`
+    ] },
+    { diff: {
+      removed: null,
+      moved: null,
+      copied: null,
+      added: [ { score: 200, _index: 1 } ]
+    } }
+  ]
+}
+
 exports.cases.sortMoved = {
   query: `SELECT score, assignment_id AS assign FROM scores ORDER BY score DESC`,
   events: [

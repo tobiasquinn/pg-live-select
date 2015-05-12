@@ -133,7 +133,7 @@ LivePg.prototype._initListener = function() {
                   // Rows changed in INSERT/DELETE operations only check once
                   : queryBuffer.triggers[payload.table](payload.data[0])))
               || (queryBuffer.triggers
-                // No manual trigger for self table, always refresh
+                // No manual trigger for this table, always refresh
                 && !(payload.table in  queryBuffer.triggers))
               // No manual triggers at all, always refresh
               || !queryBuffer.triggers) {
@@ -240,19 +240,6 @@ function(query, params, triggers, queryHash, handle) {
       initialized   : false
     }
 
-    // Determine dependent tables, from cache if possible
-    if(queryHash in self.tablesUsedCache) {
-      attachTriggers(self.tablesUsedCache[queryHash]);
-    } else {
-      findDependentRelations(self.connStr, query, params,
-        function(error, result) {
-          if(error) return handle.emit('error', error);
-          self.tablesUsedCache[queryHash] = result;
-          attachTriggers(result);
-        }
-      );
-    }
-
     var attachTriggers = function(tablesUsed) {
       var queries = [];
 
@@ -283,6 +270,19 @@ function(query, params, triggers, queryHash, handle) {
       // Retrieve initial results
       self.waitingToUpdate.push(queryHash)
     };
+
+    // Determine dependent tables, from cache if possible
+    if(queryHash in self.tablesUsedCache) {
+      attachTriggers(self.tablesUsedCache[queryHash]);
+    } else {
+      findDependentRelations(self.connStr, query, params,
+        function(error, result) {
+          if(error) return handle.emit('error', error);
+          self.tablesUsedCache[queryHash] = result;
+          attachTriggers(result);
+        }
+      );
+    }
   }
 }
 

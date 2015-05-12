@@ -240,19 +240,6 @@ function(query, params, triggers, queryHash, handle) {
       initialized   : false
     }
 
-    // Determine dependent tables, from cache if possible
-    if(queryHash in self.tablesUsedCache) {
-      attachTriggers(self.tablesUsedCache[queryHash]);
-    } else {
-      findDependentRelations(self.connStr, query, params,
-        function(error, result) {
-          if(error) return handle.emit('error', error);
-          self.tablesUsedCache[queryHash] = result;
-          attachTriggers(result);
-        }
-      );
-    }
-
     var attachTriggers = function(tablesUsed) {
       var queries = [];
 
@@ -277,6 +264,19 @@ function(query, params, triggers, queryHash, handle) {
         readyToUpdate();
       }
     };
+
+    // Determine dependent tables, from cache if possible
+    if(queryHash in self.tablesUsedCache) {
+      attachTriggers(self.tablesUsedCache[queryHash]);
+    } else {
+      findDependentRelations(self.connStr, query, params,
+        function(error, result) {
+          if(error) return handle.emit('error', error);
+          self.tablesUsedCache[queryHash] = result;
+          attachTriggers(result);
+        }
+      );
+    }
 
     var readyToUpdate = function(error) {
       if(error) return handle.emit('error', error);

@@ -1,3 +1,4 @@
+// pg-live-select, MIT License
 var fs = require('fs');
 var path = require('path');
 var EventEmitter = require('events').EventEmitter;

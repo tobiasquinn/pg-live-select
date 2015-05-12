@@ -16,6 +16,3 @@ WHERE
   assignments.class_id = $1
 ORDER BY
   score_id ASC
-/*
-select * from assignments where class_id = $1
-*/

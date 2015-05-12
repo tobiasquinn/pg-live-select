@@ -1,23 +1,33 @@
 {
   "name": "pg-live-select",
   "version": "1.0.0",
-  "description" : "Live updating PostgreSQL SELECT statements",
+  "description": "Live updating PostgreSQL SELECT statements",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "CONN=\"postgres://meteor:meteor@127.0.0.1/meteor_test\" CHANNEL=\"package_test\" DEBUG=0 STATS=0 nodeunit test/index.js"
   },
-  "contributors" : [
+  "contributors": [
     "numtel <ben@latenightsketches.com>",
     "nothingisdead <rbmyr8@gmail.com>"
   ],
-  "repository"  : "https://github.com/numtel/pg-live-select.git",
+  "repository": "https://github.com/numtel/pg-live-select.git",
   "license": "MIT",
   "keywords": [
-    "postgresql", "notify", "live", "continuous", "query", "select"
+    "postgresql",
+    "notify",
+    "live",
+    "continuous",
+    "query",
+    "select"
   ],
   "dependencies": {
     "lodash": "^3.8.0",
     "murmurhash-js": "^1.0.0",
     "pg": "^4.3.0"
+  },
+  "devDependencies": {
+    "babel": "^5.2.17",
+    "nodeunit": "^0.9.1",
+    "random-strings": "0.0.1"
   }
 }

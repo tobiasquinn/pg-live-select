@@ -1,0 +1,10 @@
+language: node_js
+node_js:
+  - "0.12"
+  - "0.10"
+addons:
+  postgresql: "9.3"
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
+script:
+  - "CONN=\"postgres://postgres@127.0.0.1/travis_ci_test\" CHANNEL=\"travis_test\" nodeunit test/index.js"

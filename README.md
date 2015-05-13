@@ -1,4 +1,4 @@
-# pg-live-select
+# pg-live-select [![Build Status](https://travis-ci.org/numtel/pg-live-select.svg?branch=master)](https://travis-ci.org/numtel/pg-live-select)
 
 NPM Package to provide events when a PostgreSQL `SELECT` statement result set changes.
 

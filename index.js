@@ -236,7 +236,6 @@ function(query, params, triggers, queryHash, handle) {
       triggers      : triggers,
       data          : [],
       handlers      : [ handle ],
-      notifications : [],
       initialized   : false
     }
 

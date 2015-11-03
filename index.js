@@ -1,29 +1,21 @@
 // pg-live-select, MIT License
 var fs = require('fs');
 var path = require('path');
-var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 
 var _ = require('lodash');
 var pg = require('pg');
-var murmurHash   = require('murmurhash-js').murmur3
 
+var LiveSelectBase = require('./lib/LiveSelectBase');
 var querySequence = require('./lib/querySequence');
-var SelectHandle = require('./lib/SelectHandle');
 var differ = require('./lib/differ');
-
-/*
- * Duration (ms) to wait to check for new updates when no updates are
- *  available in current frame
- */
-var STAGNANT_TIMEOUT = 100;
 
 var TRIGGER_QUERY_TPL = loadQueryFromFile('lib/trigger.tpl.sql');
 var REFRESH_QUERY_TPL = loadQueryFromFile('lib/refresh.tpl.sql');
 
 function LivePg(connStr, channel) {
   var self = this;
-  EventEmitter.call(self);
+  LiveSelectBase.call(self);
 
   self.connStr = connStr;
   self.channel = channel;
@@ -31,44 +23,15 @@ function LivePg(connStr, channel) {
   self.notifyClient = null;
   self.notifyDone = null;
   self.waitingPayloads = {};
-  self.waitingToUpdate = [];
-  self.selectBuffer    = {};
-  self.allTablesUsed   = {};
   self.tablesUsedCache = {};
 
   self._initTriggerFun();
   self._initListener();
-  self._initUpdateLoop();
 
 }
 
-util.inherits(LivePg, EventEmitter);
+util.inherits(LivePg, LiveSelectBase);
 module.exports = LivePg;
-
-LivePg.prototype.select = function(query, params, triggers) {
-  var self = this;
-
-  // Allow omission of params argument
-  if(typeof params === 'object' && !(params instanceof Array)) {
-    triggers = params;
-    params = [];
-  } else if(typeof params === 'undefined') {
-    params = [];
-  }
-
-  if(typeof query !== 'string')
-    throw new Error('QUERY_STRING_MISSING');
-  if(!(params instanceof Array))
-    throw new Error('PARAMS_ARRAY_MISMATCH');
-
-  var queryHash = murmurHash(JSON.stringify([ query, params ]));
-  var handle = new SelectHandle(self, queryHash);
-
-  // Perform initialization asynchronously
-  self._initSelect(query, params, triggers, queryHash, handle);
-
-  return handle;
-}
 
 LivePg.prototype.cleanup = function(callback) {
   var self = this;
@@ -120,56 +83,16 @@ LivePg.prototype._initListener = function() {
             new Error('INVALID_NOTIFICATION ' + payload));
         }
 
-        if(payload.table in self.allTablesUsed) {
-          self.allTablesUsed[payload.table].forEach(function(queryHash) {
-            var queryBuffer = self.selectBuffer[queryHash];
-            if((queryBuffer.triggers
-                // Check for true response from manual trigger
-                && payload.table in queryBuffer.triggers
-                && (payload.op === 'UPDATE'
-                  // Rows changed in an UPDATE operation must check old and new
-                  ? queryBuffer.triggers[payload.table](payload.new_data[0])
-                    || queryBuffer.triggers[payload.table](payload.old_data[0])
-                  // Rows changed in INSERT/DELETE operations only check once
-                  : queryBuffer.triggers[payload.table](payload.data[0])))
-              || (queryBuffer.triggers
-                // No manual trigger for this table, always refresh
-                && !(payload.table in  queryBuffer.triggers))
-              // No manual triggers at all, always refresh
-              || !queryBuffer.triggers) {
-
-              self.waitingToUpdate.push(queryHash);
-            }
-          });
+        if(payload.op === 'UPDATE') {
+          self._matchRowEvent(payload.table, payload.new_data[0], payload.old_data[0]);
         }
+        else {
+          self._matchRowEvent(payload.table, payload.data[0]);
+        }
+
       }
     })
   });
-}
-
-LivePg.prototype._initUpdateLoop = function() {
-  var self = this;
-
-  var performNextUpdate = function() {
-    if(self.waitingToUpdate.length !== 0) {
-      var queriesToUpdate =
-        _.uniq(self.waitingToUpdate.splice(0, self.waitingToUpdate.length));
-      var updateReturned = 0;
-
-      queriesToUpdate.forEach(function(queryHash) {
-        self._updateQuery(queryHash, function(error) {
-          updateReturned++;
-          if(error) self.emit('error', error);
-          if(updateReturned === queriesToUpdate.length) performNextUpdate();
-        })
-      });
-    } else {
-      // No queries to update, wait for set duration
-      setTimeout(performNextUpdate, STAGNANT_TIMEOUT);
-    }
-  };
-
-  performNextUpdate();
 }
 
 LivePg.prototype._processNotification = function(payload) {
@@ -213,81 +136,51 @@ LivePg.prototype._processNotification = function(payload) {
 }
 
 LivePg.prototype._initSelect =
-function(query, params, triggers, queryHash, handle) {
+function(query, params, triggers, queryHash, handle, callback) {
   var self = this;
-  if(queryHash in self.selectBuffer) {
-    // Same query already exists
-    // Give a chance for event listener to be added
-    process.nextTick(function() {
-      var queryBuffer = self.selectBuffer[queryHash];
 
-      queryBuffer.handlers.push(handle);
+  var attachTriggers = function(tablesUsed) {
+    var queries = [];
 
-      // Initial results from cache
-      handle.emit('update',
-        { removed: null, moved: null, copied: null, added: queryBuffer.data },
-        queryBuffer.data);
-    });
-  } else {
-    // Initialize result set cache
-    var newBuffer = self.selectBuffer[queryHash] = {
-      query         : query,
-      params        : params,
-      triggers      : triggers,
-      data          : [],
-      handlers      : [ handle ],
-      initialized   : false
-    }
-
-    var attachTriggers = function(tablesUsed) {
-      var queries = [];
-
-      tablesUsed.forEach(function(table) {
-        if(!(table in self.allTablesUsed)) {
-          self.allTablesUsed[table] = [ queryHash ];
-          var triggerName = self.channel + '_' + table;
-          queries.push(
-            'DROP TRIGGER IF EXISTS "' + triggerName + '" ON "' + table + '"');
-          queries.push(
-            'CREATE TRIGGER "' + triggerName + '" ' +
-              'AFTER INSERT OR UPDATE OR DELETE ON "' + table + '" ' +
-              'FOR EACH ROW EXECUTE PROCEDURE "' + self.triggerFun + '"()');
-        } else if(self.allTablesUsed[table].indexOf(queryHash) === -1) {
-          self.allTablesUsed[table].push(queryHash);
-        }
-      });
-
-      if(queries.length !== 0) {
-        querySequence(self.connStr, queries, readyToUpdate);
-      } else {
-        readyToUpdate();
+    tablesUsed.forEach(function(table) {
+      if(!(table in self.allTablesUsed)) {
+        self.allTablesUsed[table] = [ queryHash ];
+        var triggerName = self.channel + '_' + table;
+        queries.push(
+          'DROP TRIGGER IF EXISTS "' + triggerName + '" ON "' + table + '"');
+        queries.push(
+          'CREATE TRIGGER "' + triggerName + '" ' +
+            'AFTER INSERT OR UPDATE OR DELETE ON "' + table + '" ' +
+            'FOR EACH ROW EXECUTE PROCEDURE "' + self.triggerFun + '"()');
+      } else if(self.allTablesUsed[table].indexOf(queryHash) === -1) {
+        self.allTablesUsed[table].push(queryHash);
       }
-    };
+    });
 
-    var readyToUpdate = function(error) {
-      if(error) return handle.emit('error', error);
-      // Retrieve initial results
-      self.waitingToUpdate.push(queryHash)
-    };
-
-    // Determine dependent tables, from cache if possible
-    if(queryHash in self.tablesUsedCache) {
-      attachTriggers(self.tablesUsedCache[queryHash]);
+    if(queries.length !== 0) {
+      querySequence(self.connStr, queries, callback);
     } else {
-      findDependentRelations(self.connStr, query, params,
-        function(error, result) {
-          if(error) return handle.emit('error', error);
-          self.tablesUsedCache[queryHash] = result;
-          attachTriggers(result);
-        }
-      );
+      callback();
     }
+  };
+
+
+  // Determine dependent tables, from cache if possible
+  if(queryHash in self.tablesUsedCache) {
+    attachTriggers(self.tablesUsedCache[queryHash]);
+  } else {
+    findDependentRelations(self.connStr, query, params,
+      function(error, result) {
+        if(error) return callback(error);
+        self.tablesUsedCache[queryHash] = result;
+        attachTriggers(result);
+      }
+    );
   }
 }
 
-LivePg.prototype._updateQuery = function(queryHash, callback) {
+LivePg.prototype._updateQuery = function(queryBuffer, callback) {
   var self = this;
-  var queryBuffer = self.selectBuffer[queryHash];
 
   var oldHashes = queryBuffer.data.map(function(row) { return row._hash; });
 

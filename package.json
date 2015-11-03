@@ -21,6 +21,7 @@
     "select"
   ],
   "dependencies": {
+    "deep-diff": "^0.3.3",
     "lodash": "^3.8.0",
     "murmurhash-js": "^1.0.0",
     "pg": "^4.3.0"

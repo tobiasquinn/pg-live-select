@@ -42,7 +42,11 @@ exports.variousQueries = function(test) {
             var event = details.events[index]
 
             _.forOwn(event, (data, eventType) => {
-              printDebug && console.log('EVENT', eventType, updateLog.length)
+              printDebug && console.log('EVENT', caseId, eventType, updateLog.length)
+
+              if(typeof data === 'object' && ('mode_' + process.env.MODE in data)) {
+                data = data['mode_' + process.env.MODE];
+              }
 
               switch(eventType){
                 case 'perform':
@@ -85,7 +89,9 @@ exports.variousQueries = function(test) {
                     }, 100)
                   }
                   else {
-                    test.ok(errorLog[0].toString().match(data) !== null)
+                    test.ok(errorLog[0].toString().match(data) !== null,
+                      `${caseId} Incorrect error on error event #${nextLogPos}:
+                        ${errorLog[0].toString()}`)
                     // Move to next event
                     processEvents(callback, index + 1)
                   }

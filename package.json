@@ -4,7 +4,9 @@
   "description": "Live updating PostgreSQL SELECT statements",
   "main": "index.js",
   "scripts": {
-    "test": "CONN=\"postgres://meteor:meteor@127.0.0.1/meteor_test\" CHANNEL=\"package_test\" DEBUG=0 STATS=0 nodeunit test/index.js"
+    "test": "npm run test-pg && npm run test-mysql",
+    "test-pg": "MODE=\"pg\" CONN=\"postgres://meteor:meteor@127.0.0.1/meteor_test\" CHANNEL=\"package_test\" DEBUG=0 STATS=0 nodeunit test/index.js",
+    "test-mysql": "MODE=\"my\" HOST=\"localhost\" USER=\"root\" PASSWORD=\"numtel\" DATABASE=\"live_select_test\" SERVER_ID=349 DEBUG=0 STATS=0 nodeunit test/index.js"
   },
   "contributors": [
     "numtel <ben@latenightsketches.com>",
@@ -24,7 +26,10 @@
     "deep-diff": "^0.3.3",
     "lodash": "^3.8.0",
     "murmurhash-js": "^1.0.0",
-    "pg": "^4.3.0"
+    "pg": "^4.3.0",
+    "md5": "^2.0.0",
+    "mysql": "^2.8.0",
+    "zongji": "^0.3.2"
   },
   "devDependencies": {
     "babel": "^5.2.17",

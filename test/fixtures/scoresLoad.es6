@@ -55,22 +55,49 @@ function(classCount, assignPerClass, studentsPerClass, classesPerStudent) {
   return { assignments, students, scores }
 }
 
-function columnTypeFromName(name) {
-  switch(name){
-    case 'id'       : return 'serial NOT NULL'
-    case 'name'     : return 'character varying(50) NOT NULL'
-    case 'big_name' : return 'text NOT NULL'
-    default         : return 'integer NOT NULL'
+
+function columnTypeFromName(name, mode) {
+  switch(mode) {
+    case 'pg':
+      switch(name){
+        case 'id'       : return 'serial NOT NULL'
+        case 'name'     : return 'character varying(50) NOT NULL'
+        case 'big_name' : return 'text NOT NULL'
+        default         : return 'integer NOT NULL'
+      }
+      break;
+    case 'my':
+      switch(name){
+        case 'id'       : return 'INT NOT NULL AUTO_INCREMENT'
+        case 'name'     : return 'VARCHAR(50) NOT NULL'
+        case 'big_name' : return 'TEXT NOT NULL'
+        default         : return 'INT NOT NULL'
+      }
+      break;
   }
 }
 
 /**
  * Create/replace test tables filled with fixture data
- * @param  Object   generatation     Output from generate() function above
+ * @param  Object   generation     Output from generate() function above
  * @return Promise
  */
 exports.install = function(generation) {
+  var mode = process.env.MODE;
+
   return Promise.all(_.map(generation, (rows, table) => {
+
+    var primaryKeySnippet, analyzeCommand;
+    switch(mode) {
+      case 'pg':
+        primaryKeySnippet = `CONSTRAINT ${table}_pkey PRIMARY KEY (id)`;
+        analyzeCommand = `ANALYZE `;
+        break;
+      case 'my':
+        primaryKeySnippet = `PRIMARY KEY (id)`;
+        analyzeCommand = `ANALYZE TABLE `;
+        break;
+    }
 
     // Create tables, Insert data
     var installQueries = [
@@ -78,9 +105,8 @@ exports.install = function(generation) {
 
       `CREATE TABLE ${table} (
         ${_.keys(rows[0])
-          .map(column => `${column} ${columnTypeFromName(column)}`).join(', ')},
-        CONSTRAINT ${table}_pkey PRIMARY KEY (id)
-      ) WITH ( OIDS=FALSE )`
+          .map(column => `${column} ${columnTypeFromName(column, mode)}`).join(', ')},
+        ${primaryKeySnippet})`
     ]
 
     // Insert max 500 rows per query
@@ -89,7 +115,8 @@ exports.install = function(generation) {
       return [`INSERT INTO ${table}
           (${_.keys(rowShard[0]).join(', ')})
          VALUES ${rowShard.map(row =>
-          `(${_.map(row, () => '$' + ++valueCount).join(', ')})`).join(', ')}`,
+          `(${_.map(row, () => '$' + ++valueCount).join(', ')})`
+          ).join(', ')}`,
        _.flatten(rowShard.map(row => _.values(row))) ]
     }))
 
@@ -99,11 +126,14 @@ exports.install = function(generation) {
 
     if(indexes[tablePrefix] && indexes[tablePrefix].length !== 0) {
       for(let index of indexes[tablePrefix]) {
-        installQueries.push(`CREATE INDEX ON ${table} (${index})`)
+        installQueries.push(`
+          CREATE INDEX
+            ${table}_index_${index.split(' ')[0]}
+          ON ${table} (${index})`)
       }
     }
 
-    installQueries.push(`ANALYZE ${table}`)
+    installQueries.push(analyzeCommand + table)
 
     return querySequence(installQueries)
   }))

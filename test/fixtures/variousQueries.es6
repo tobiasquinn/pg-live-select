@@ -169,203 +169,110 @@ exports.cases.leftRightJoin = {
     WHERE
       assignments.class_id = 1
     ORDER BY
-      score DESC
+      score DESC, value ASC
   `,
   events: [
-    { data: [
-      { _index: 1,
-        student_name: null,
-        name: 'Assignment 2',
-        value: 29,
-        score: null },
-      { _index: 2,
-        student_name: null,
-        name: 'Assignment 3',
-        value: 57,
-        score: null },
-      { _index: 3,
-        student_name: 'Student 2',
-        name: 'Assignment 1',
-        value: 64,
-        score: 54 },
-      { _index: 4,
-        student_name: 'Student 1',
-        name: 'Assignment 1',
-        value: 64,
-        score: 52 },
-      { _index: 5,
-        student_name: 'Student 3',
-        name: 'Assignment 1',
-        value: 64,
-        score: 28 }
-    ] },
+    { data: { mode_pg: [
+      { _index: 1, student_name: null, name: 'Assignment 2', value: 29, score: null },
+      { _index: 2, student_name: null, name: 'Assignment 3', value: 57, score: null },
+      { _index: 3, student_name: 'Student 2', name: 'Assignment 1', value: 64, score: 54 },
+      { _index: 4, student_name: 'Student 1', name: 'Assignment 1', value: 64, score: 52 },
+      { _index: 5, student_name: 'Student 3', name: 'Assignment 1', value: 64, score: 28 }
+    ], mode_my: [
+      { _index: 1, student_name: 'Student 2', name: 'Assignment 1', value: 64, score: 54 },
+      { _index: 2, student_name: 'Student 1', name: 'Assignment 1', value: 64, score: 52 },
+      { _index: 3, student_name: 'Student 3', name: 'Assignment 1', value: 64, score: 28 },
+      { _index: 4, student_name: null, name: 'Assignment 2', value: 29, score: null },
+      { _index: 5, student_name: null, name: 'Assignment 3', value: 57, score: null }
+    ] } },
     { perform: [
       `INSERT INTO scores (id, assignment_id, student_id, score) VALUES
         (4, 2, 1, 25)`
     ] },
-    { data: [
-      { _index: 1,
-        student_name: null,
-        name: 'Assignment 3',
-        value: 57,
-        score: null },
-      { _index: 2,
-        student_name: 'Student 2',
-        name: 'Assignment 1',
-        value: 64,
-        score: 54 },
-      { _index: 3,
-        student_name: 'Student 1',
-        name: 'Assignment 1',
-        value: 64,
-        score: 52 },
-      { _index: 4,
-        student_name: 'Student 3',
-        name: 'Assignment 1',
-        value: 64,
-        score: 28 },
-      { _index: 5,
-        student_name: 'Student 1',
-        name: 'Assignment 2',
-        value: 29,
-        score: 25 }
-    ] },
+    { data: { mode_pg: [
+      { _index: 1, student_name: null, name: 'Assignment 3', value: 57, score: null },
+      { _index: 2, student_name: 'Student 2', name: 'Assignment 1', value: 64, score: 54 },
+      { _index: 3, student_name: 'Student 1', name: 'Assignment 1', value: 64, score: 52 },
+      { _index: 4, student_name: 'Student 3', name: 'Assignment 1', value: 64, score: 28 },
+      { _index: 5, student_name: 'Student 1', name: 'Assignment 2', value: 29, score: 25 }
+    ], mode_my: [
+      { _index: 1, student_name: 'Student 2', name: 'Assignment 1', value: 64, score: 54 },
+      { _index: 2, student_name: 'Student 1', name: 'Assignment 1', value: 64, score: 52 },
+      { _index: 3, student_name: 'Student 3', name: 'Assignment 1', value: 64, score: 28 },
+      { _index: 4, student_name: 'Student 1', name: 'Assignment 2', value: 29, score: 25 },
+      { _index: 5, student_name: null, name: 'Assignment 3', value: 57, score: null }
+    ] } },
     { perform: [
       `INSERT INTO scores (id, assignment_id, student_id, score) VALUES
-        (5, 2, 4, 25)`
+        (5, 2, 4, 24)`
     ] },
-    { data: [
-      { _index: 1,
-        student_name: null,
-        name: 'Assignment 3',
-        value: 57,
-        score: null },
-      { _index: 2,
-        student_name: 'Student 2',
-        name: 'Assignment 1',
-        value: 64,
-        score: 54 },
-      { _index: 3,
-        student_name: 'Student 1',
-        name: 'Assignment 1',
-        value: 64,
-        score: 52 },
-      { _index: 4,
-        student_name: 'Student 3',
-        name: 'Assignment 1',
-        value: 64,
-        score: 28 },
-      { _index: 5,
-        student_name: 'Student 1',
-        name: 'Assignment 2',
-        value: 29,
-        score: 25 },
-      { _index: 6,
-        student_name: null,
-        name: 'Assignment 2',
-        value: 29,
-        score: 25 }
-    ] },
+    { data: { mode_pg: [
+      { _index: 1, student_name: null, name: 'Assignment 3', value: 57, score: null },
+      { _index: 2, student_name: 'Student 2', name: 'Assignment 1', value: 64, score: 54 },
+      { _index: 3, student_name: 'Student 1', name: 'Assignment 1', value: 64, score: 52 },
+      { _index: 4, student_name: 'Student 3', name: 'Assignment 1', value: 64, score: 28 },
+      { _index: 5, student_name: 'Student 1', name: 'Assignment 2', value: 29, score: 25 },
+      { _index: 6, student_name: null, name: 'Assignment 2', value: 29, score: 24 }
+    ], mode_my: [
+      { _index: 1, student_name: 'Student 2', name: 'Assignment 1', value: 64, score: 54 },
+      { _index: 2, student_name: 'Student 1', name: 'Assignment 1', value: 64, score: 52 },
+      { _index: 3, student_name: 'Student 3', name: 'Assignment 1', value: 64, score: 28 },
+      { _index: 4, student_name: 'Student 1', name: 'Assignment 2', value: 29, score: 25 },
+      { _index: 5, student_name: null, name: 'Assignment 2', value: 29, score: 24 },
+      { _index: 6, student_name: null, name: 'Assignment 3', value: 57, score: null }
+    ] } },
     { perform: [
       `UPDATE scores SET score = 21 WHERE id = 4`
     ] },
-    { data: [
-      { _index: 1,
-        student_name: null,
-        name: 'Assignment 3',
-        value: 57,
-        score: null },
-      { _index: 2,
-        student_name: 'Student 2',
-        name: 'Assignment 1',
-        value: 64,
-        score: 54 },
-      { _index: 3,
-        student_name: 'Student 1',
-        name: 'Assignment 1',
-        value: 64,
-        score: 52 },
-      { _index: 4,
-        student_name: 'Student 3',
-        name: 'Assignment 1',
-        value: 64,
-        score: 28 },
-      { _index: 5,
-        student_name: null,
-        name: 'Assignment 2',
-        value: 29,
-        score: 25 },
-      { _index: 6,
-        student_name: 'Student 1',
-        name: 'Assignment 2',
-        value: 29,
-        score: 21 }
-    ] },
+    { data: { mode_pg: [
+      { _index: 1, student_name: null, name: 'Assignment 3', value: 57, score: null },
+      { _index: 2, student_name: 'Student 2', name: 'Assignment 1', value: 64, score: 54 },
+      { _index: 3, student_name: 'Student 1', name: 'Assignment 1', value: 64, score: 52 },
+      { _index: 4, student_name: 'Student 3', name: 'Assignment 1', value: 64, score: 28 },
+      { _index: 5, student_name: null, name: 'Assignment 2', value: 29, score: 24 },
+      { _index: 6, student_name: 'Student 1', name: 'Assignment 2', value: 29, score: 21 }
+    ], mode_my: [
+      { _index: 1, student_name: 'Student 2', name: 'Assignment 1', value: 64, score: 54 },
+      { _index: 2, student_name: 'Student 1', name: 'Assignment 1', value: 64, score: 52 },
+      { _index: 3, student_name: 'Student 3', name: 'Assignment 1', value: 64, score: 28 },
+      { _index: 4, student_name: null, name: 'Assignment 2', value: 29, score: 24 },
+      { _index: 5, student_name: 'Student 1', name: 'Assignment 2', value: 29, score: 21 },
+      { _index: 6, student_name: null, name: 'Assignment 3', value: 57, score: null }
+    ] } },
     { perform: [
       `UPDATE students SET name = 'John Doe' WHERE id = 2`
     ] },
-    { data: [
-      { _index: 1,
-        student_name: null,
-        name: 'Assignment 3',
-        value: 57,
-        score: null },
-      { _index: 2,
-        student_name: 'John Doe',
-        name: 'Assignment 1',
-        value: 64,
-        score: 54 },
-      { _index: 3,
-        student_name: 'Student 1',
-        name: 'Assignment 1',
-        value: 64,
-        score: 52 },
-      { _index: 4,
-        student_name: 'Student 3',
-        name: 'Assignment 1',
-        value: 64,
-        score: 28 },
-      { _index: 5,
-        student_name: null,
-        name: 'Assignment 2',
-        value: 29,
-        score: 25 },
-      { _index: 6,
-        student_name: 'Student 1',
-        name: 'Assignment 2',
-        value: 29,
-        score: 21 }
-    ] },
+    { data: { mode_pg: [
+      { _index: 1, student_name: null, name: 'Assignment 3', value: 57, score: null },
+      { _index: 2, student_name: 'John Doe', name: 'Assignment 1', value: 64, score: 54 },
+      { _index: 3, student_name: 'Student 1', name: 'Assignment 1', value: 64, score: 52 },
+      { _index: 4, student_name: 'Student 3', name: 'Assignment 1', value: 64, score: 28 },
+      { _index: 5, student_name: null, name: 'Assignment 2', value: 29, score: 24 },
+      { _index: 6, student_name: 'Student 1', name: 'Assignment 2', value: 29, score: 21 }
+    ], mode_my: [
+      { _index: 1, student_name: 'John Doe', name: 'Assignment 1', value: 64, score: 54 },
+      { _index: 2, student_name: 'Student 1', name: 'Assignment 1', value: 64, score: 52 },
+      { _index: 3, student_name: 'Student 3', name: 'Assignment 1', value: 64, score: 28 },
+      { _index: 4, student_name: null, name: 'Assignment 2', value: 29, score: 24 },
+      { _index: 5, student_name: 'Student 1', name: 'Assignment 2', value: 29, score: 21 },
+      { _index: 6, student_name: null, name: 'Assignment 3', value: 57, score: null }
+    ] } },
     { perform: [
       `DELETE FROM scores WHERE id = 4`
     ] },
-    { data: [
-      { _index: 1,
-        student_name: null,
-        name: 'Assignment 3',
-        value: 57,
-        score: null },
-      { _index: 2,
-        student_name: 'John Doe',
-        name: 'Assignment 1',
-        value: 64,
-        score: 54 },
-      { _index: 3,
-        student_name: 'Student 1',
-        name: 'Assignment 1',
-        value: 64,
-        score: 52 },
-      { _index: 4,
-        student_name: 'Student 3',
-        name: 'Assignment 1',
-        value: 64,
-        score: 28 },
-      { _index: 5,
-        student_name: null,
-        name: 'Assignment 2',
-        value: 29,
-        score: 25 }
-    ] },
+    { data: { mode_pg: [
+      { _index: 1, student_name: null, name: 'Assignment 3', value: 57, score: null },
+      { _index: 2, student_name: 'John Doe', name: 'Assignment 1', value: 64, score: 54 },
+      { _index: 3, student_name: 'Student 1', name: 'Assignment 1', value: 64, score: 52 },
+      { _index: 4, student_name: 'Student 3', name: 'Assignment 1', value: 64, score: 28 },
+      { _index: 5, student_name: null, name: 'Assignment 2', value: 29, score: 24 }
+    ], mode_my: [
+      { _index: 1, student_name: 'John Doe', name: 'Assignment 1', value: 64, score: 54 },
+      { _index: 2, student_name: 'Student 1', name: 'Assignment 1', value: 64, score: 52 },
+      { _index: 3, student_name: 'Student 3', name: 'Assignment 1', value: 64, score: 28 },
+      { _index: 4, student_name: null, name: 'Assignment 2', value: 29, score: 24 },
+      { _index: 5, student_name: null, name: 'Assignment 3', value: 57, score: null }
+    ] } },
     { perform: [
       // assignment with different class_id, no changes
       `INSERT INTO assignments (id, class_id, name, value) VALUES
@@ -381,7 +288,8 @@ exports.cases.leftRightJoin = {
   ]
 }
 
-exports.cases.fullJoin = {
+// XXX: FULL JOIN not compatible with MySQL
+exports.casesxxxfullJoin = {
   query: `
       SELECT
       assignments.name,
@@ -418,7 +326,7 @@ exports.cases.fullJoin = {
 exports.cases.max = {
   query: `
     SELECT
-      MAX(scores.score)
+      MAX(scores.score) AS max
     FROM
       scores
     INNER JOIN assignments ON
@@ -573,7 +481,10 @@ exports.cases.stopped = {
 exports.cases.relation_error = {
   query: `SELECT score FROM scores_invalid ORDER BY score DESC`,
   events: [
-    { error: /error: relation "scores_relation_error_invalid" does not exist/ }
+    { error: {
+      mode_pg: /error: relation "scores_relation_error_invalid" does not exist/,
+      mode_my: /ER_NO_SUCH_TABLE/
+    } }
   ]
 }
 

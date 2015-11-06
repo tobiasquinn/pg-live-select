@@ -53,8 +53,8 @@ exports.scoresLoad = function(test) {
     var curStage = 0
     var liveSelects = []
     _.range(selectsPerClass).forEach(selectIndex => {
-      liveSelects = liveSelects.concat(_.range(classCount).map(index =>
-        liveDb.select(`
+      liveSelects = liveSelects.concat(_.range(classCount).map(index => {
+        return liveDb.select(`
           SELECT
             students.name  AS student_name,
             students.id    AS student_id,
@@ -123,7 +123,8 @@ exports.scoresLoad = function(test) {
               }
               break
           }
-        })))
+        })
+      }))
     })
 
     // Stage 0 : cache initial data
@@ -166,12 +167,14 @@ exports.scoresLoad = function(test) {
         ])
       }
 
-      printStats && console.time('score update queries')
+      if(printStats) {
+        console.time('score update queries')
+        console.time('scores updated on instances')
+      }
 
       querySequence(queries).then(result => {
         if(printStats) {
           console.timeEnd('score update queries')
-          console.time('scores updated on instances')
         }
       })
     }

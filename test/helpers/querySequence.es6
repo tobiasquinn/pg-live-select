@@ -45,7 +45,7 @@ module.exports = function(queries) {
   return new Promise((resolve, reject) => {
     var handlerFun, connection;
 
-    switch(process.env.MODE) {
+    switch(serverMode) {
       case 'pg':
         handlerFun = querySequencePg;
         connection = process.env.CONN;

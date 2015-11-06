@@ -56,8 +56,8 @@ function(classCount, assignPerClass, studentsPerClass, classesPerStudent) {
 }
 
 
-function columnTypeFromName(name, mode) {
-  switch(mode) {
+function columnTypeFromName(name) {
+  switch(serverMode) {
     case 'pg':
       switch(name){
         case 'id'       : return 'serial NOT NULL'
@@ -83,12 +83,10 @@ function columnTypeFromName(name, mode) {
  * @return Promise
  */
 exports.install = function(generation) {
-  var mode = process.env.MODE;
-
   return Promise.all(_.map(generation, (rows, table) => {
 
     var primaryKeySnippet, analyzeCommand;
-    switch(mode) {
+    switch(serverMode) {
       case 'pg':
         primaryKeySnippet = `CONSTRAINT ${table}_pkey PRIMARY KEY (id)`;
         analyzeCommand = `ANALYZE `;
@@ -105,7 +103,7 @@ exports.install = function(generation) {
 
       `CREATE TABLE ${table} (
         ${_.keys(rows[0])
-          .map(column => `${column} ${columnTypeFromName(column, mode)}`).join(', ')},
+          .map(column => `${column} ${columnTypeFromName(column)}`).join(', ')},
         ${primaryKeySnippet})`
     ]
 

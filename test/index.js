@@ -9,39 +9,21 @@
 // Global flags
 global.printDebug = process.env.DEBUG === '1'
 global.printStats = process.env.STATS === '1'
+global.serverMode = process.env.MODE
 
 // ES6+ may be used in all files required by this one
 require('babel/register')({ stage: 0 })
 
 var _         = require('lodash')
-var LivePg    = require('../')
-var LiveMysql = require('../').LiveMysql
+var liveSql   = require('../')
+
+var settings  = require('./settings');
+if(!serverMode in settings)
+  throw new Error('Invalid MODE setting! Available: ' +
+    Object.keys(settings).join(', '));
 
 // Define global instance
-switch(process.env.MODE) {
-  case 'pg':
-    if(!('CONN' in process.env))
-      throw new Error(
-        'CONN environment variable required! (database connection string)')
-    if(!('CHANNEL' in process.env))
-      throw new Error(
-        'CHANNEL environment variable required! (notification identifier string)')
-
-    global.liveDb   = new LivePg(process.env.CONN, process.env.CHANNEL)
-    break;
-  case 'my':
-    global.liveDb = new LiveMysql({
-      host: process.env.HOST,
-      user: process.env.USER,
-      password: process.env.PASSWORD,
-      database: process.env.DATABASE,
-      serverId: process.env.SERVER_ID,
-      minInterval: 200
-    });
-    break;
-  default:
-    throw new Error('MODE environment variable required! "pg" or "my"');
-}
+global.liveDb = liveSql.connect(settings[serverMode], {});
 liveDb.on('error', function(error) { console.log(error) })
 
 // Load full test suite

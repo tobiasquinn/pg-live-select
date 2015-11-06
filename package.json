@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run test-pg && npm run test-mysql",
-    "test-pg": "MODE=\"pg\" CONN=\"postgres://meteor:meteor@127.0.0.1/meteor_test\" CHANNEL=\"package_test\" DEBUG=0 STATS=0 nodeunit test/index.js",
-    "test-mysql": "MODE=\"my\" HOST=\"localhost\" USER=\"root\" PASSWORD=\"numtel\" DATABASE=\"live_select_test\" SERVER_ID=349 DEBUG=0 STATS=0 nodeunit test/index.js"
+    "test-pg": "MODE=\"pg\" DEBUG=0 STATS=0 nodeunit test/index.js",
+    "test-mysql": "MODE=\"my\" DEBUG=0 STATS=0 nodeunit test/index.js"
   },
   "contributors": [
     "numtel <ben@latenightsketches.com>",
@@ -29,11 +29,11 @@
     "pg": "^4.3.0",
     "md5": "^2.0.0",
     "mysql": "^2.8.0",
-    "zongji": "^0.3.2"
+    "zongji": "^0.3.2",
+    "random-strings": "0.0.1"
   },
   "devDependencies": {
     "babel": "^5.2.17",
-    "nodeunit": "^0.9.1",
-    "random-strings": "0.0.1"
+    "nodeunit": "^0.9.1"
   }
 }

@@ -421,12 +421,7 @@ exports.cases.allExpression = {
 exports.cases.initialEmpty = {
   query: `SELECT score  FROM scores WHERE score > 100 ORDER BY score DESC`,
   events: [
-    { diff: {
-      removed: null,
-      moved: null,
-      copied: null,
-      added: []
-    } },
+    { diff: null },
     { data: [] },
     { perform: [
       `UPDATE scores SET score = 200 WHERE id = 3`

@@ -48,7 +48,7 @@ module.exports = function(queries) {
     switch(serverMode) {
       case 'pg':
         handlerFun = querySequencePg;
-        connection = process.env.CONN;
+        connection = liveDb.connStr;
       break;
       case 'my':
         handlerFun = querySequenceMy;

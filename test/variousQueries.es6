@@ -44,7 +44,10 @@ exports.variousQueries = function(test) {
             _.forOwn(event, (data, eventType) => {
               printDebug && console.log('EVENT', caseId, eventType, updateLog.length)
 
-              if(typeof data === 'object' && ('mode_' + process.env.MODE in data)) {
+              if(data
+                && typeof data === 'object'
+                && ('mode_' + process.env.MODE in data)
+              ) {
                 data = data['mode_' + process.env.MODE];
               }
 
@@ -75,7 +78,7 @@ exports.variousQueries = function(test) {
                     // New update has arrived, check against data or diff
                     test.deepEqual(
                       orderByIndex(updateLog[nextLogPos][eventType]), data,
-                      `${caseId} Difference on event #${nextLogPos}`)
+                      `${caseId} ${eventType} Difference on event #${nextLogPos}`)
 
                     // Move to next event
                     processEvents(callback, index + 1)

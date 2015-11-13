@@ -24,7 +24,7 @@ if(!serverMode in settings)
 
 // Define global instance
 global.liveDb = liveSql.connect(settings[serverMode], {});
-liveDb.on('error', function(error) { console.log(error) })
+liveDb.on('error', function(error) { console.log('liveDb error', error) })
 
 // Load full test suite
 module.exports = _.assign(

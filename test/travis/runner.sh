@@ -1,6 +1,6 @@
 echo -e "\033[1;35m Run test on Postgres\033[0m"
 psql -c 'create database travis_ci_test;' -U postgres
-npm run test-pg
+npm run test-pg || exit $?
 
 echo -e "\033[1;35m Run test on MySQL 5.1.73\033[0m"
 mysql -hlocalhost -p3351 -uroot -e "create database travis_test;"

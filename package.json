@@ -4,7 +4,8 @@
   "description": "Live updating PostgreSQL SELECT statements",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test-pg && npm run test-mysql",
+    "test": "npm run test-unit && npm run test-pg && npm run test-mysql",
+    "test-unit": "MODE=\"unit\" DEBUG=0 STATS=0 nodeunit test/index.js",
     "test-pg": "MODE=\"pg\" DEBUG=0 STATS=0 nodeunit test/index.js",
     "test-mysql": "MODE=\"my\" DEBUG=0 STATS=0 nodeunit test/index.js"
   },

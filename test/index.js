@@ -17,18 +17,26 @@ require('babel/register')({ stage: 0 })
 var _         = require('lodash')
 var liveSql   = require('../')
 
-var settings  = require('./settings');
-if(!serverMode in settings)
-  throw new Error('Invalid MODE setting! Available: ' +
-    Object.keys(settings).join(', '));
+if(serverMode === 'unit') {
+  // Load unit test suite
+  module.exports = _.assign(
+    require('./helpers/lifecycle')
+  , require('./LiveSelectBase')
+  )
+} else {
+  // Load integration test suite
+  var settings  = require('./settings');
+  if(!serverMode in settings)
+    throw new Error('Invalid MODE setting! Available: ' +
+      Object.keys(settings).join(', '));
 
-// Define global instance
-global.liveDb = liveSql.connect(settings[serverMode], {});
-liveDb.on('error', function(error) { console.log('liveDb error', error) })
+  // Define global instance
+  global.liveDb = liveSql.connect(settings[serverMode], {});
+  liveDb.on('error', function(error) { console.log('liveDb error', error) })
 
-// Load full test suite
-module.exports = _.assign(
-  require('./helpers/lifecycle')
+  module.exports = _.assign(
+    require('./helpers/lifecycle')
   , require('./scoresLoad') // Optional CLASS_COUNT env variable, default 1
   , require('./variousQueries')
-)
+  )
+}

@@ -12,7 +12,8 @@ module.exports = {
 
     setTimeout(function(){
       if(startCount === testCount){
-        liveDb.cleanup(process.exit)
+        if(global.liveDb) liveDb.cleanup(process.exit)
+        else process.exit()
       }
     }, 1000)
 

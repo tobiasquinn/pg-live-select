@@ -313,8 +313,9 @@ LivePg.prototype._updateQuery = function(queryHash, callback) {
 
     if(diff !== null) {
       var newData = differ.apply(queryBuffer.data, diff);
-      queryBuffer.data = newData;
+      queryBuffer.data = newData.newResults;
 
+      diff.removed = newData.removedResults;
       var eventArgs = [
         'update',
         filterHashProperties(diff),
